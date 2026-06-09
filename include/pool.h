@@ -1,50 +1,66 @@
 #ifndef POOL_H
 #define POOL_H
 
-//定义稀有度
-typedef enum{
-    _3STARS = 3,
-    _4STARS = 4,
-    _5STARS = 5
+/* ========== 枚举定义 ========== */
 
-}Rarity;
-
+/* 稀有度 */
 typedef enum {
-    WEAPON_SWORD,       // 单手剑
-    WEAPON_BIGSWORD,    // 双手剑
-    WEAPON_BOW,         // 弓
-    WEAPON_CATALYST,    // 法器
-    WEAPON_POLEARM      // 长柄武器
-} Weapon_type;
+    RARITY_3 = 3,
+    RARITY_4 = 4,
+    RARITY_5 = 5
+} Rarity;
 
-//定义角色
-typedef struct{
+/* 武器类型 */
+typedef enum {
+    WEAPON_SWORD,       /* 单手剑 */
+    WEAPON_CLAYMORE,    /* 双手剑 */
+    WEAPON_BOW,         /* 弓 */
+    WEAPON_CATALYST,    /* 法器 */
+    WEAPON_POLEARM      /* 长柄武器 */
+} WeaponType;
+
+/* ========== 数据结构 ========== */
+
+/* 角色 */
+typedef struct {
     int id;
     char name[32];
     Rarity rarity;
-    int is_up;    //1=UP角色，0=常驻
-}Character;
+    int is_up;          /* 1=UP角色，0=常驻 */
+} Character;
 
-//定义武器
-typedef struct{
+/* 武器 */
+typedef struct {
     int id;
     char name[32];
-    Weapon_type Weapon_type;
+    WeaponType weapon_type;
     Rarity rarity;
-    int is_up;    //1=UP武器，0=常驻
-}Weapon;
+    int is_up;          /* 1=UP武器，0=常驻 */
+} Weapon;
 
-typedef struct{
-    double base_rate;    //基础概率
-    int baodi;          //保底抽数
-    int riseup_point;   //开始概率提升的抽数
-}Rate;
+/* 概率配置 */
+typedef struct {
+    double base_rate;       /* 基础概率，如 ★5 = 0.006 */
+    int hard_pity;          /* 硬保底所需抽数 */
+    int soft_pity_start;    /* 软保底起始抽数（概率开始递增） */
+} RateConfig;
 
-//对外接口
+/* ========== 对外接口 ========== */
 
-const Rate* get_rate(Rarity rarity);
-int get_count(Rarity rarity);          //某星级的角色数
-const Character* get_character(Rarity rarity, int index);
-const Weapon* get_Weapon(Rarity rarity, int index);
+/* --- 概率配置 --- */
+const RateConfig* pool_get_rate(Rarity rarity);
+
+/* --- 角色查询 --- */
+int               pool_get_character_count(Rarity rarity);
+const Character*  pool_get_character(Rarity rarity, int index);
+const Character*  pool_get_character_by_id(int id);
+
+/* --- 武器查询 --- */
+int               pool_get_weapon_count(Rarity rarity);
+const Weapon*     pool_get_weapon(Rarity rarity, int index);
+const Weapon*     pool_get_weapon_by_id(int id);
+
+/* --- 武器类型名称 --- */
+const char*       pool_weapon_type_name(WeaponType type);
 
 #endif
