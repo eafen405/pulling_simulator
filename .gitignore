@@ -1,4 +1,37 @@
 *.exe
 *.o
 *.out
+*.obj
+*.pdb
+*.ilk
+*.sln.docstates
+*.idb
+*.ipdb
+*.iobj
+*.ipch
+
+# Visual Studio
+.vs/
 .vscode/
+x64/
+Debug/
+Release/
+Win32/
+x86/
+Any CPU/
+
+# VS 临时文件
+*.tlog
+*.lastbuildstate
+*.log
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# 编译输出
+out/
+build/
+bin/
+obj/
