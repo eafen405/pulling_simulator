@@ -1,0 +1,16 @@
+# 编译输出
+gacha.exe
+*.o
+
+# 运行时数据
+state.txt
+record.txt
+
+# AI 工具缓存
+.omo/
+memory/
+AGENTS.md
+
+# 临时测试文件
+_test_*
+ulw-notepad.md

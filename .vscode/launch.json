@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "运行 gacha",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/gacha.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb",
+            "preLaunchTask": "编译 gacha"
+        }
+    ]
+}

@@ -1,0 +1,26 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "编译 gacha",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "-I", "include",
+                "-o", "gacha",
+                "src/main.c",
+                "src/pool.c",
+                "src/state.c",
+                "src/algorithm.c",
+                "src/record.c",
+                "src/ui.c"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "gcc 编译所有模块（include 在 include/，源码在 src/），输出 gacha.exe"
+        }
+    ]
+}

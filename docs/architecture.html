@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抽卡模拟器 · 架构全景图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;600;700;900&family=JetBrains+Mono:wght@300;400;600;800&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0e1a;
+  --bg-panel: #111827;
+  --bg-card: #1a1f35;
+  --border: #2a3050;
+  --text: #c8d2e6;
+  --text-dim: #6a7594;
+  --text-bright: #f0f4ff;
+  --accent-cyan: #00e5ff;
+  --accent-blue: #448aff;
+  --accent-violet: #b388ff;
+  --accent-green: #69f0ae;
+  --accent-amber: #ffd740;
+  --accent-pink: #ff80ab;
+  --accent-red: #ff5252;
+  --glow-cyan: 0 0 20px rgba(0,229,255,0.3);
+  --glow-blue: 0 0 20px rgba(68,138,255,0.3);
+  --glow-violet: 0 0 20px rgba(179,136,255,0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Noto Sans SC', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ---- Background texture ---- */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(0,229,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 60%, rgba(179,136,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 90%, rgba(68,138,255,0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ---- Grid overlay ---- */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(42,48,80,0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42,48,80,0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+}
+
+/* ---- Page chrome ---- */
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 40px 32px 80px;
+}
+
+/* ---- Header ---- */
+.header {
+  text-align: center;
+  margin-bottom: 72px;
+  position: relative;
+}
+.header-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0,229,255,0.3);
+  padding: 6px 18px;
+  border-radius: 3px;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+.header h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: clamp(28px, 5vw, 44px);
+  color: var(--text-bright);
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+.header h1 .dot { color: var(--accent-cyan); }
+.header p {
+  color: var(--text-dim);
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+/* ---- Section ---- */
+.section {
+  margin-bottom: 80px;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.section-title .num {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 48px;
+  color: rgba(0,229,255,0.12);
+  line-height: 1;
+  min-width: 60px;
+}
+.section-title h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-bright);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.section-title .line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
+}
+
+/* ============================================
+   DIAGRAM 1: Overall Architecture
+   ============================================ */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  grid-template-rows: auto auto auto auto auto;
+  gap: 16px;
+  position: relative;
+}
+
+/* main.c header bar */
+.arch-main {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  background: var(--bg-card);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 10px;
+  padding: 20px 28px;
+  position: relative;
+  box-shadow: var(--glow-cyan);
+}
+.arch-main::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.15), transparent 50%, rgba(179,136,255,0.1));
+  pointer-events: none;
+  z-index: -1;
+}
+.arch-main-label {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--accent-cyan);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.arch-main-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+.arch-main-flows {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.flow-item {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.flow-item span {
+  color: var(--accent-green);
+}
+
+/* Module cards */
+.arch-module {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 16px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.arch-module:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255,255,255,0.25);
+}
+
+.arch-module:nth-child(2) { grid-column: 1; grid-row: 3; }
+.arch-module:nth-child(3) { grid-column: 2; grid-row: 3; }
+.arch-module:nth-child(4) { grid-column: 3; grid-row: 3; }
+.arch-module:nth-child(5) { grid-column: 4; grid-row: 3; }
+.arch-module:nth-child(6) { grid-column: 5; grid-row: 3; }
+
+.mod-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.mod-icon.state   { background: rgba(0,229,255,0.12); color: var(--accent-cyan); }
+.mod-icon.algo    { background: rgba(179,136,255,0.12); color: var(--accent-violet); }
+.mod-icon.pool    { background: rgba(105,240,174,0.12); color: var(--accent-green); }
+.mod-icon.record  { background: rgba(255,215,64,0.12); color: var(--accent-amber); }
+.mod-icon.ui      { background: rgba(255,128,171,0.12); color: var(--accent-pink); }
+
+.mod-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+.mod-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.mod-desc .label {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+.mod-file {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent-blue);
+  margin-top: 8px;
+}
+
+/* Connectors from main to modules */
+.connector-line {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  position: relative;
+  height: 28px;
+}
+
+/* File boxes under modules */
+.arch-files-row {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.file-badge {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 6px 10px;
+  border: 1px dashed var(--border);
+  border-radius: 4px;
+  background: rgba(0,0,0,0.2);
+}
+.file-badge .name { color: var(--accent-blue); }
+.file-badge.none {
+  border-style: dotted;
+  opacity: 0.4;
+}
+
+/* Terminal badge */
+.terminal-badge {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 6px 10px;
+}
+
+/* ============================================
+   DIAGRAM 2: Call Flow
+   ============================================ */
+.callflow-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.callflow-main {
+  background: var(--bg-card);
+  border: 2px solid var(--accent-cyan);
+  border-radius: 12px;
+  padding: 16px 48px;
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-bright);
+  letter-spacing: 2px;
+  box-shadow: var(--glow-cyan);
+  position: relative;
+}
+
+.callflow-branches {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 28px;
+  position: relative;
+  width: 100%;
+}
+.callflow-branches::before {
+  content: '';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 28px;
+  background: var(--accent-cyan);
+}
+.callflow-branches::after {
+  content: '';
+  position: absolute;
+  top: -28px;
+  left: calc(50% - 280px);
+  width: 560px;
+  height: 1px;
+  background: var(--accent-cyan);
+}
+
+.flow-module {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 20px;
+  text-align: center;
+  min-width: 130px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.flow-module:hover {
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+.flow-module::before {
+  content: '';
+  position: absolute;
+  top: -28px;
+  left: 50%;
+  width: 1px;
+  height: 28px;
+}
+.flow-module.state::before   { background: var(--accent-cyan); }
+.flow-module.algo::before    { background: var(--accent-violet); }
+.flow-module.pool::before    { background: var(--accent-green); }
+.flow-module.record::before  { background: var(--accent-amber); }
+.flow-module.ui::before      { background: var(--accent-pink); }
+
+.flow-module .fm-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+/* Special connector: algo -> pool */
+.callflow-extra {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.callflow-extra .arrow {
+  color: var(--accent-violet);
+}
+.callflow-extra .note {
+  color: var(--accent-amber);
+}
+
+.callflow-rule {
+  margin-top: 32px;
+  padding: 20px 28px;
+  background: rgba(255,82,82,0.06);
+  border: 1px solid rgba(255,82,82,0.2);
+  border-radius: 8px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.rule-item {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.rule-item strong {
+  color: var(--accent-amber);
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   DIAGRAM 3: Sequence
+   ============================================ */
+.seq-container {
+  position: relative;
+  padding-left: 40px;
+}
+
+/* Lifelines */
+.seq-lifelines {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.seq-lifeline {
+  text-align: center;
+  min-width: 90px;
+}
+.seq-lifeline .ll-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0 auto 6px;
+  border: 2px solid var(--border);
+}
+.seq-lifeline .ll-icon.user  { background: rgba(255,215,64,0.12); border-color: var(--accent-amber); color: var(--accent-amber); }
+.seq-lifeline .ll-icon.main  { background: rgba(0,229,255,0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.seq-lifeline .ll-icon.state { background: rgba(0,229,255,0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.seq-lifeline .ll-icon.algo  { background: rgba(179,136,255,0.12); border-color: var(--accent-violet); color: var(--accent-violet); }
+.seq-lifeline .ll-icon.pool  { background: rgba(105,240,174,0.12); border-color: var(--accent-green); color: var(--accent-green); }
+.seq-lifeline .ll-icon.rec   { background: rgba(255,215,64,0.12); border-color: var(--accent-amber); color: var(--accent-amber); }
+.seq-lifeline .ll-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Sequence steps */
+.seq-step {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid rgba(42,48,80,0.4);
+  position: relative;
+  transition: all 0.25s ease;
+}
+.seq-step:hover {
+  background: rgba(255,255,255,0.015);
+}
+
+.seq-step-num {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-cyan);
+  min-width: 32px;
+  text-align: right;
+  margin-right: 16px;
+  opacity: 0.6;
+}
+
+.seq-arrow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  position: relative;
+}
+.seq-from, .seq-to {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.seq-from { color: var(--accent-blue); background: rgba(68,138,255,0.08); }
+.seq-to   { color: var(--accent-green); background: rgba(105,240,174,0.08); }
+
+.seq-desc {
+  font-size: 12px;
+  color: var(--text);
+  margin-left: 8px;
+  flex: 1;
+}
+.seq-desc .code {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-cyan);
+  font-size: 11px;
+}
+
+.seq-result {
+  font-size: 11px;
+  color: var(--accent-amber);
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(255,215,64,0.06);
+  padding: 2px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+/* Arrow SVG */
+.seq-arrow-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-dim);
+}
+.seq-arrow-line svg {
+  flex-shrink: 0;
+}
+
+/* Note callout */
+.seq-note {
+  margin-top: 16px;
+  padding: 14px 20px;
+  background: rgba(0,229,255,0.04);
+  border-left: 2px solid var(--accent-cyan);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+  text-align: center;
+  padding-top: 40px;
+  border-top: 1px solid rgba(42,48,80,0.4);
+}
+.footer p {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.footer .tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent-blue);
+  background: rgba(68,138,255,0.08);
+  padding: 4px 12px;
+  border-radius: 3px;
+  margin: 0 4px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+  .arch-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 10px;
+  }
+  .arch-main { grid-column: 1 / -1; grid-row: auto; }
+  .connector-line { display: none; }
+  .arch-module:nth-child(n+2) { grid-column: auto; grid-row: auto; }
+  .arch-files-row { grid-template-columns: 1fr 1fr; }
+
+  .callflow-branches { flex-wrap: wrap; }
+  .callflow-rule { flex-direction: column; gap: 16px; }
+
+  .seq-lifelines { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-badge">System Architecture</div>
+    <h1>抽卡模拟器<span class="dot">·</span>架构全景</h1>
+    <p>Gacha Simulator — Module Design &amp; Data Flow</p>
+  </header>
+
+  <!-- ================================================================ -->
+  <!-- DIAGRAM 1: Overall Architecture -->
+  <!-- ================================================================ -->
+  <section class="section">
+    <div class="section-title">
+      <span class="num">01</span>
+      <h2>整体架构总览</h2>
+      <span class="line"></span>
+    </div>
+
+    <div class="arch-grid">
+      <!-- main.c -->
+      <div class="arch-main">
+        <div class="arch-main-label">┃ ENTRY POINT</div>
+        <div class="arch-main-title">main.c · 主控调度中心</div>
+        <div class="arch-main-flows">
+          <div class="flow-item"><span>启动时</span> 状态模块←加载状态 · UI←初始化界面</div>
+          <div class="flow-item"><span>抽卡时</span> 取状态 → 算法 → 得结果 → 更新状态 → 写记录 → 显示</div>
+          <div class="flow-item"><span>退出时</span> 状态模块←保存状态</div>
+        </div>
+      </div>
+
+      <!-- Connector space -->
+      <div class="connector-line"></div>
+
+      <!-- Module: 状态管理 -->
+      <div class="arch-module">
+        <div class="mod-icon state">S</div>
+        <div class="mod-name">状态管理模块</div>
+        <div class="mod-desc">
+          <span class="label">职责</span> · 内存中维护状态<br>
+          <span class="label">职责</span> · 文件读写
+        </div>
+        <div class="mod-desc" style="margin-top:6px">
+          <span class="label">接口</span> load() · get_pity() · set_pity() · save()
+        </div>
+        <div class="mod-file">📄 state.dat</div>
+      </div>
+
+      <!-- Module: 算法 -->
+      <div class="arch-module">
+        <div class="mod-icon algo">A</div>
+        <div class="mod-name">算法模块</div>
+        <div class="mod-desc">
+          <span class="label">职责</span> · 纯函数，无状态<br>
+          <span class="label">输入</span> 当前状态<br>
+          <span class="label">输出</span> 稀有度 · 角色下标
+        </div>
+        <div class="mod-desc" style="margin-top:6px">
+          <span class="label">特性</span> 同样输入→同样输出
+        </div>
+        <div class="mod-file" style="color:var(--text-dim);opacity:0.4">纯计算，无文件</div>
+      </div>
+
+      <!-- Module: 卡池 -->
+      <div class="arch-module">
+        <div class="mod-icon pool">P</div>
+        <div class="mod-name">卡池模块</div>
+        <div class="mod-desc">
+          <span class="label">职责</span> · 静态数据存储<br>
+          <span class="label">职责</span> · 查询接口
+        </div>
+        <div class="mod-desc" style="margin-top:6px">
+          <span class="label">接口</span> 按稀有度取概率列表 · 按稀有度取具体角色
+        </div>
+        <div class="mod-file">📄 pool.json</div>
+      </div>
+
+      <!-- Module: 记录 -->
+      <div class="arch-module">
+        <div class="mod-icon record">R</div>
+        <div class="mod-name">抽卡记录模块</div>
+        <div class="mod-desc">
+          <span class="label">职责</span> · 追加写抽卡记录到文件
+        </div>
+        <div class="mod-desc" style="margin-top:6px">
+          <span class="label">接口</span> 写入一条记录
+        </div>
+        <div class="mod-file">📄 record.json</div>
+      </div>
+
+      <!-- Module: UI -->
+      <div class="arch-module">
+        <div class="mod-icon ui">U</div>
+        <div class="mod-name">UI 模块 (CLI)</div>
+        <div class="mod-desc">
+          <span class="label">职责</span> · 显示菜单<br>
+          <span class="label">职责</span> · 接收用户输入<br>
+          <span class="label">职责</span> · 显示抽卡结果
+        </div>
+        <div class="mod-desc" style="margin-top:6px">
+          <span class="label">接口</span> 显示结果 · 显示菜单 · 读取命令
+        </div>
+        <div class="mod-file" style="color:var(--text-dim);opacity:0.4">终端交互，无文件</div>
+      </div>
+
+      <!-- File row under modules -->
+      <div class="arch-files-row">
+        <div class="file-badge"><span class="name">📄 state.dat</span></div>
+        <div class="file-badge none"><span class="name">(纯计算)</span></div>
+        <div class="file-badge"><span class="name">📄 pool.json</span></div>
+        <div class="file-badge"><span class="name">📄 record.json</span></div>
+        <div class="terminal-badge">🖥 终端</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- DIAGRAM 2: Call Flow / Module Interfaces -->
+  <!-- ================================================================ -->
+  <section class="section">
+    <div class="section-title">
+      <span class="num">02</span>
+      <h2>模块接口 &amp; 调用流向</h2>
+      <span class="line"></span>
+    </div>
+
+    <div class="callflow-container">
+      <div class="callflow-main">main</div>
+
+      <div class="callflow-branches">
+        <div class="flow-module state">
+          <div class="fm-name">状态模块</div>
+        </div>
+        <div class="flow-module algo">
+          <div class="fm-name">算法模块</div>
+        </div>
+        <div class="flow-module pool">
+          <div class="fm-name">卡池模块</div>
+        </div>
+        <div class="flow-module record">
+          <div class="fm-name">记录模块</div>
+        </div>
+        <div class="flow-module ui">
+          <div class="fm-name">UI 模块</div>
+        </div>
+      </div>
+
+      <div class="callflow-extra">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <path d="M5 10 L15 10 M12 6 L15 10 L12 14" stroke="#b388ff" stroke-width="1.5" fill="none"/>
+        </svg>
+        <span>算法模块</span>
+        <span class="arrow">→ 调用 →</span>
+        <span>卡池模块（获取概率/角色列表）</span>
+        <span class="note">← 唯一例外：只读查询</span>
+      </div>
+
+      <div class="callflow-rule">
+        <div class="rule-item">
+          <strong>单向调用</strong>
+          总是 main 调用各模块，模块之间不互相调用<br>（算法调卡池是唯一例外，且是只读查询）
+        </div>
+        <div class="rule-item">
+          <strong>数据流向</strong>
+          状态数据：文件 ⇄ 状态模块 ⇄ main ⇄ 算法<br>
+          静态数据：文件 → 卡池模块 → 算法<br>
+          记录数据：main → 记录模块 → 文件
+        </div>
+        <div class="rule-item">
+          <strong>算法纯函数</strong>
+          不碰文件，不存状态<br>
+          同样的输入永远得到同样的输出
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <!-- DIAGRAM 3: Single Draw Sequence -->
+  <!-- ================================================================ -->
+  <section class="section">
+    <div class="section-title">
+      <span class="num">03</span>
+      <h2>单次抽卡时序</h2>
+      <span class="line"></span>
+    </div>
+
+    <!-- Lifeline headers -->
+    <div class="seq-lifelines">
+      <div class="seq-lifeline"><div class="ll-icon user" style="width:28px;height:28px;font-size:10px">U</div><div class="ll-label">用户</div></div>
+      <div class="seq-lifeline"><div class="ll-icon main">M</div><div class="ll-label">main</div></div>
+      <div class="seq-lifeline"><div class="ll-icon state">S</div><div class="ll-label">状态</div></div>
+      <div class="seq-lifeline"><div class="ll-icon algo">A</div><div class="ll-label">算法</div></div>
+      <div class="seq-lifeline"><div class="ll-icon pool">P</div><div class="ll-label">卡池</div></div>
+      <div class="seq-lifeline"><div class="ll-icon rec">R</div><div class="ll-label">记录</div></div>
+      <div class="seq-lifeline"><div class="ll-icon" style="background:rgba(255,128,171,0.12);border-color:var(--accent-pink);color:var(--accent-pink)">U</div><div class="ll-label">UI</div></div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="seq-step">
+      <span class="seq-step-num">1</span>
+      <div class="seq-arrow">
+        <span class="seq-from">用户</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#ffd740" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">main</span>
+        <span class="seq-desc">选择 <span class="code">"单抽"</span></span>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="seq-step">
+      <span class="seq-step-num">2</span>
+      <div class="seq-arrow">
+        <span class="seq-from">main</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#00e5ff" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">状态模块</span>
+        <span class="seq-desc"><span class="code">get_pity()</span> → 当前抽数、保底标志</span>
+      </div>
+      <span class="seq-result">→ 抽数, 保底</span>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="seq-step">
+      <span class="seq-step-num">3</span>
+      <div class="seq-arrow">
+        <span class="seq-from">main</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#b388ff" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">算法模块</span>
+        <span class="seq-desc">传入当前状态</span>
+      </div>
+    </div>
+
+    <!-- Step 3a: algo → pool -->
+    <div class="seq-step" style="padding-left:56px">
+      <span class="seq-step-num" style="font-size:11px;color:var(--accent-violet)">3a</span>
+      <div class="seq-arrow">
+        <span class="seq-from" style="background:rgba(179,136,255,0.08);color:var(--accent-violet)">算法</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#69f0ae" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">卡池模块</span>
+        <span class="seq-desc">获取五星概率、角色列表等</span>
+      </div>
+    </div>
+
+    <!-- Step 3b: pool → algo -->
+    <div class="seq-step" style="padding-left:56px">
+      <span class="seq-step-num" style="font-size:11px;color:var(--accent-green)">3b</span>
+      <div class="seq-arrow">
+        <span class="seq-from" style="background:rgba(105,240,174,0.08);color:var(--accent-green)">卡池</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#b388ff" stroke-width="1" fill="none" style="stroke-dasharray:3 2"/></svg>
+        <span class="seq-to" style="background:rgba(179,136,255,0.08);color:var(--accent-violet)">算法</span>
+        <span class="seq-desc">返回概率、角色数据</span>
+      </div>
+    </div>
+
+    <!-- Step 4: algo → main -->
+    <div class="seq-step">
+      <span class="seq-step-num">4</span>
+      <div class="seq-arrow">
+        <span class="seq-from" style="background:rgba(179,136,255,0.08);color:var(--accent-violet)">算法</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#b388ff" stroke-width="1" fill="none" style="stroke-dasharray:3 2"/></svg>
+        <span class="seq-to">main</span>
+        <span class="seq-desc">返回 <span class="code">(稀有度, 角色下标)</span></span>
+      </div>
+      <span class="seq-result">(★★★★★, 刻晴)</span>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="seq-step">
+      <span class="seq-step-num">5</span>
+      <div class="seq-arrow">
+        <span class="seq-from">main</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#00e5ff" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">状态模块</span>
+        <span class="seq-desc"><span class="code">set_pity(新抽数)</span> 等更新</span>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="seq-step">
+      <span class="seq-step-num">6</span>
+      <div class="seq-arrow">
+        <span class="seq-from">main</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#ffd740" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">记录模块</span>
+        <span class="seq-desc">写入一条新记录</span>
+      </div>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="seq-step">
+      <span class="seq-step-num">7</span>
+      <div class="seq-arrow">
+        <span class="seq-from">main</span>
+        <svg width="40" height="10" viewBox="0 0 40 10"><path d="M0 5 L35 5 M32 2 L35 5 L32 8" stroke="#ff80ab" stroke-width="1.5" fill="none"/></svg>
+        <span class="seq-to">UI 模块</span>
+        <span class="seq-desc">显示抽到的角色信息</span>
+      </div>
+      <span class="seq-result">✨ 显示结果</span>
+    </div>
+
+    <div class="seq-note">
+      💡 步骤 2-7 为一次完整单抽流程。十连抽即为循环 10 次（每次之间状态会更新，影响下一次概率）。
+    </div>
+
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>
+      抽卡模拟器架构文档
+      <span class="tag">C 语言</span>
+      <span class="tag">模块化设计</span>
+      <span class="tag">CLI 应用</span>
+    </p>
+  </footer>
+
+</div>
+
+</body>
+</html>
