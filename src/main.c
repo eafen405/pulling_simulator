@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <conio.h>
 
@@ -30,12 +31,15 @@ int main(void) {
         switch (choice) {
             case 1: { /* 单抽 */
                 int rarity = algorithm_draw(&state, rates);
-                int idx = algorithm_pick_character(rarity, state.guarantee_5star);
+                int idx = algorithm_pick_character(rarity, state.guarantee_5star, state.guarantee_4star);
                 const char* name = pool_get_name(rarity, idx);
-                int is_featured = (rarity == 5 && idx == 0);
+
+                int is_featured_5 = (rarity == 5 && idx == 0);
+                int is_featured_4 = (rarity == 4 &&
+                    (strcmp(name, "重云") == 0 || strcmp(name, "北斗") == 0 || strcmp(name, "迪奥娜") == 0));
 
                 ui_show_result(rarity, name);
-                state_update(&state, rarity, is_featured);
+                state_update(&state, rarity, is_featured_5, is_featured_4);
                 state_save(&state);
                 record_append(rarity, name);
 
@@ -50,13 +54,16 @@ int main(void) {
 
                 for (int i = 0; i < 10; i++) {
                     int r = algorithm_draw(&state, rates);
-                    int idx = algorithm_pick_character(r, state.guarantee_5star);
+                    int idx = algorithm_pick_character(r, state.guarantee_5star, state.guarantee_4star);
                     const char* name = pool_get_name(r, idx);
-                    int is_featured = (r == 5 && idx == 0);
+
+                    int is_featured_5 = (r == 5 && idx == 0);
+                    int is_featured_4 = (r == 4 &&
+                        (strcmp(name, "重云") == 0 || strcmp(name, "北斗") == 0 || strcmp(name, "迪奥娜") == 0));
 
                     rarities[i] = r;
                     names[i] = name;
-                    state_update(&state, r, is_featured);
+                    state_update(&state, r, is_featured_5, is_featured_4);
                 }
 
                 state_save(&state);

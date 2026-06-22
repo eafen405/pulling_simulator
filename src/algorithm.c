@@ -47,7 +47,7 @@ int algorithm_draw(const struct GachaState* state, const struct PoolRates* rates
     return 3;
 }
 
-int algorithm_pick_character(int rarity, int guarantee_5star) {
+int algorithm_pick_character(int rarity, int guarantee_5star, int guarantee_4star) {
     switch (rarity) {
         case 5: {
             /* 5★ 池：index 0 = UP, 1~8 = 常驻 */
@@ -60,9 +60,23 @@ int algorithm_pick_character(int rarity, int guarantee_5star) {
             return 1 + (rand() % 8);
         }
         case 4: {
-            /* 4★ 池：68 个 (18 武器 + 50 角色) */
-            int count = pool_get_count(4);
-            return rand() % count;
+            /* 4★ UP：重云、北斗、迪奥娜 → 对应池内 index 53, 58, 67 */
+            static const int up4_idx[] = {53, 58, 67};
+            int up4_count = 3;
+
+            if (guarantee_4star)
+                return up4_idx[rand() % up4_count];
+
+            if (rand() % 2 == 0)    /* 50% 中 UP */
+                return up4_idx[rand() % up4_count];
+
+            /* 未中 UP → 从非 UP 4★ 中随机（68 个 - 3 个 UP） */
+            int idx = rand() % (pool_get_count(4) - up4_count);
+            for (int i = 0; i < up4_count; i++) {
+                if (idx >= up4_idx[i])
+                    idx++;
+            }
+            return idx;
         }
         case 3: {
             /* 3★ 池：13 个武器 */
