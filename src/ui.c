@@ -4,12 +4,14 @@
 #include "ui.h"
 
 /* ANSI 颜色 */
-#define COLOR_GOLD  "\033[1;33m"
+#define COLOR_GOLD   "\033[1;33m"
 #define COLOR_PURPLE "\033[1;35m"
-#define COLOR_BLUE  "\033[1;34m"
-#define COLOR_RESET "\033[0m"
+#define COLOR_BLUE   "\033[1;34m"
+#define COLOR_RED    "\033[1;31m"
+#define COLOR_CYAN   "\033[1;36m"
+#define COLOR_RESET  "\033[0m"
 
-int ui_menu(void) {
+int ui_menu(const struct GachaState* state) {
     system("cls");
     int choice = 0;
     do {
@@ -17,6 +19,29 @@ int ui_menu(void) {
         printf("========================\n");
         printf("   ✦ Gacha 抽卡模拟器 ✦\n");
         printf("========================\n");
+
+        /* 5★ 保底状态 */
+        printf("  5★ 垫抽：");
+        printf(COLOR_GOLD "%d/90" COLOR_RESET, state->pity_5star);
+        printf("  ");
+        if (state->guarantee_5star)
+            printf(COLOR_RED "[大保底]" COLOR_RESET " ← 上次歪了");
+        else
+            printf(COLOR_CYAN "[小保底]" COLOR_RESET);
+
+        printf("\n");
+
+        /* 4★ 保底状态 */
+        printf("  4★ 垫抽：");
+        printf(COLOR_PURPLE "%d/10" COLOR_RESET, state->pity_4star);
+        printf("  ");
+        if (state->guarantee_4star)
+            printf(COLOR_RED "[大保底]" COLOR_RESET);
+        else
+            printf(COLOR_CYAN "[小保底]" COLOR_RESET);
+
+        printf("\n");
+        printf("------------------------\n");
         printf("  1. 单抽一次\n");
         printf("  2. 十连\n");
         printf("  3. 查看历史记录\n");

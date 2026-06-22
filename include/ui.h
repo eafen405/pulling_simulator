@@ -1,7 +1,9 @@
 #pragma once
 
+#include "state.h"
+
 /* 显示主菜单，返回用户选择 (1/2/3/4) */
-int ui_menu(void);
+int ui_menu(const struct GachaState* state);
 
 /* 显示单次抽卡结果 */
 void ui_show_result(int rarity, const char* name);

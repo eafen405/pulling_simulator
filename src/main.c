@@ -26,7 +26,7 @@ int main(void) {
 
     int running = 1;
     while (running) {
-        int choice = ui_menu();
+        int choice = ui_menu(&state);
 
         switch (choice) {
             case 1: { /* 单抽 */
