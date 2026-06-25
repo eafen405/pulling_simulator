@@ -1,6 +1,6 @@
-# Gacha 抽卡模拟器
+# 抽卡模拟器
 
-C 语言课程设计项目 — 命令行 Gacha 抽卡模拟器。
+C 语言课程设计项目 — 命令行抽卡模拟器。
 
 ## 项目结构
 
@@ -27,6 +27,7 @@ C 语言课程设计项目 — 命令行 Gacha 抽卡模拟器。
 - **保底机制** — 5★ 软保底（74 抽起概率提升）+ 硬保底（90 抽必出）
 - **4★ 硬保底** — 每 10 抽必出 4★ 或以上
 - **大/小保底** — 5★ 角色 50/50 机制，大保底必出当期 UP
+- **4★ UP** — 重云、北斗、迪奥娜，大小保底机制
 - **数据持久化** — 保底状态存 `state.txt`，抽卡记录存 `record.txt`
 - **历史记录** — 查看抽卡历史与当前保底状态
 
@@ -39,14 +40,15 @@ C 语言课程设计项目 — 命令行 Gacha 抽卡模拟器。
 ### 命令行
 
 ```bash
-gcc -I include -o gacha src/main.c src/pool.c src/state.c src/algorithm.c src/record.c src/ui.c
-./gacha
+gcc -Wall -Wextra -I include -o pulls src/main.c src/pool.c src/state.c src/algorithm.c src/record.c src/ui.c
+./pulls
 ```
 
 ## 卡池数据
 
 - **5★ UP**: 桑多涅
 - **5★ 常驻**: 刻晴、七七、迪卢克、琴、莫娜、提纳里、迪希雅、梦见月瑞希
+- **4★ UP**: 重云、北斗、迪奥娜
 - **4★**: 18 件武器 + 50 名角色
 - **3★**: 13 件武器
 

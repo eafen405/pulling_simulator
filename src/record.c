@@ -15,7 +15,7 @@ void record_append(int rarity, const char* name) {
     fclose(fh);
 }
 
-void record_show_history(const struct GachaState* state) {
+void record_show_history(const struct PullState* state) {
     printf("\n===== 当前保底状态 =====\n");
     printf("  距上次 5★：%d 抽\n", state->pity_5star);
     printf("  距上次 4★：%d 抽\n", state->pity_4star);

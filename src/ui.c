@@ -11,13 +11,13 @@
 #define COLOR_CYAN   "\033[1;36m"
 #define COLOR_RESET  "\033[0m"
 
-int ui_menu(const struct GachaState* state) {
+int ui_menu(const struct PullState* state) {
     system("cls");
     int choice = 0;
     do {
         printf("\n");
         printf("========================\n");
-        printf("   ✦ Gacha 抽卡模拟器 ✦\n");
+        printf("   ✦ 抽卡模拟器 ✦\n");
         printf("========================\n");
 
         /* 5★ 保底状态 */

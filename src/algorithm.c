@@ -24,7 +24,7 @@ static int roll_percent(double probability) {
     return (rand() % 10000) < threshold;
 }
 
-int algorithm_draw(const struct GachaState* state, const struct PoolRates* rates) {
+int algorithm_draw(const struct PullState* state, const struct PoolRates* rates) {
     double rate_5 = calc_rate_5(state->pity_5star, rates);
     int at_4star_pity = (state->pity_4star >= rates->hard_pity_4 - 1);
     /* 第 10 抽（pity_4star == 9）触发 4★ 硬保底 */

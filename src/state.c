@@ -5,7 +5,7 @@
 
 #define STATE_FILE "state.txt"
 
-void state_load(struct GachaState* state) {
+void state_load(struct PullState* state) {
     /* 先初始化为 0，旧格式缺少的字段也能保持默认值 */
     state->pity_5star = 0;
     state->pity_4star = 0;
@@ -37,7 +37,7 @@ void state_load(struct GachaState* state) {
     fclose(fh);
 }
 
-void state_update(struct GachaState* state, int rarity, int is_featured_5, int is_featured_4) {
+void state_update(struct PullState* state, int rarity, int is_featured_5, int is_featured_4) {
     if (rarity == 5) {
         state->pity_5star = 0;
         state->pity_4star = 0;  /* 5★ 同时重置 4★ 保底（5★ ≥ 4★） */
@@ -55,7 +55,7 @@ void state_update(struct GachaState* state, int rarity, int is_featured_5, int i
     state->total_pulls++;
 }
 
-void state_save(const struct GachaState* state) {
+void state_save(const struct PullState* state) {
     FILE* fh = fopen(STATE_FILE, "w");
     if (fh == NULL) {
         printf("警告：无法保存状态到 %s\n", STATE_FILE);

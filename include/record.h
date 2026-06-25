@@ -6,4 +6,4 @@
 void record_append(int rarity, const char* name);
 
 /* 显示历史记录，顶部显示当前保底状态 */
-void record_show_history(const struct GachaState* state);
+void record_show_history(const struct PullState* state);

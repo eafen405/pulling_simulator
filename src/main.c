@@ -17,12 +17,12 @@ int main(void) {
     /* 切换终端到 UTF-8 编码，解决中文乱码 */
     system("chcp 65001 > nul");
 
-    struct GachaState state;
+    struct PullState state;
     const struct PoolRates* rates = pool_get_rates();
 
     state_load(&state);
 
-    printf("\n✦ 欢迎来到 Gacha 抽卡模拟器！ ✦\n");
+    printf("\n✦ 欢迎来到抽卡模拟器！ ✦\n");
 
     int running = 1;
     while (running) {
